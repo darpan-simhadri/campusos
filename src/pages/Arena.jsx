@@ -145,7 +145,7 @@ function VotingPanel({ queue, votesGiven, onVote }) {
           return (
             <div key={duel.id}
               className="rounded-xl p-3 flex flex-col gap-3"
-              style={{ background: '#1C1C1C', border: '1px solid #2a2a2a' }}>
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-white line-clamp-1">{duel.challenge || duel.type}</p>
@@ -232,7 +232,7 @@ export default function Arena() {
   const modalProps = { onClose: closeModal, profile, updateProfile }
 
   return (
-    <div className="flex flex-col min-h-screen pb-24" style={{ background: '#000' }}>
+    <div className="flex flex-col min-h-screen pb-24" style={{ background: 'var(--bg-app)' }}>
 
       {/* Ticker */}
       <div className="px-4 py-2 border-b border-neutral-900">
@@ -273,12 +273,12 @@ export default function Arena() {
               transition={{ delay: i * 0.07 }}
               onClick={() => openModal(duel.id)}
               className="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-colors"
-              style={{ background: '#1C1C1C', border: `1px solid ${duel.color}30` }}
+              style={{ background: 'var(--bg-card)', border: `1px solid ${duel.color}40` }}
               whileTap={{ scale: 0.97 }}
             >
               {/* Icon bubble */}
               <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background: `${duel.color}15`, border: `1px solid ${duel.color}30` }}>
+                style={{ background: `${duel.color}15`, border: `1px solid ${duel.color}40` }}>
                 <Icon size={22} style={{ color: duel.color }} />
               </div>
 

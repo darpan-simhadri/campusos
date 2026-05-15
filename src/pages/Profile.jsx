@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Github, Edit2, MessageSquare, Users, Trophy, Code2, Star, Loader2, Save, X, Sparkles } from 'lucide-react'
+import { Github, Edit2, MessageSquare, Users, Trophy, Code2, Star, Loader2, Save, X, Sparkles, Plus } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { getDocument, updateUserProfile } from '../services/firebaseService'
-import { askOllama } from '../services/aiService'
+import { getDocument, updateUserProfile, addUserAchievement, addUserProject, addUserCollaboration } from '../services/firebaseService'
 import ReactMarkdown from 'react-markdown'
 import { SkeletonCard } from '../components/ui/Skeleton'
 import { SKILL_CATEGORIES, REPUTATION_LEVELS, BADGES } from '../data/constants'
@@ -27,6 +26,13 @@ export default function Profile() {
   const [form, setForm] = useState({})
   const [skillInput, setSkillInput] = useState('')
   const [analyzingAngle, setAnalyzingAngle] = useState(false)
+  const [showAchievementForm, setShowAchievementForm] = useState(false)
+  const [showProjectForm, setShowProjectForm] = useState(false)
+  const [showCollabForm, setShowCollabForm] = useState(false)
+  const [achievementForm, setAchievementForm] = useState({ title: '', description: '' })
+  const [projectForm, setProjectForm] = useState({ title: '', description: '', link: '', tech: '' })
+  const [collabForm, setCollabForm] = useState({ project: '', partnerName: '', role: '' })
+  const [savingItem, setSavingItem] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -67,9 +73,15 @@ export default function Profile() {
   const generateUniqueAngle = async () => {
     if (analyzingAngle) return
     setAnalyzingAngle(true)
-    const prompt = `Based on this student's profile: Branch: ${profile.branch}, Skills: ${profile.skills?.join(', ')}. Generate a "Unique Angle" (2-3 sentences) that highlights how their specific combination of skills gives them a unique advantage in the tech industry. Make it sound professional yet exciting.`
+    const branch = profile.branch || 'Tech'
+    const skills = profile.skills?.join(', ') || 'programming'
+    const templates = [
+      `As a ${branch} student with expertise in ${skills}, your rare edge is the ability to bridge theory and real-world application — a combination that most teams desperately need but rarely find.`,
+      `Your background in ${branch} combined with hands-on skills in ${skills} gives you a multi-disciplinary superpower. You can see problems that specialists miss and build solutions that generalists can't.`,
+      `With ${branch} foundations and deep skills in ${skills}, you're positioned at the intersection of depth and breadth — exactly where the most impactful work in tech happens today.`,
+    ]
+    const result = templates[Math.floor(Math.random() * templates.length)]
     try {
-      const result = await askOllama(prompt, "You are an expert career counselor for tech students.")
       await updateUserProfile(user.uid, { uniqueAngle: result })
       await refreshProfile()
       setProfile(p => ({ ...p, uniqueAngle: result }))
@@ -77,6 +89,42 @@ export default function Profile() {
       console.error(e)
     }
     setAnalyzingAngle(false)
+  }
+
+  const handleAddAchievement = async () => {
+    if (!achievementForm.title.trim() || savingItem) return
+    setSavingItem(true)
+    const item = { title: achievementForm.title.trim(), description: achievementForm.description.trim(), addedAt: new Date().toISOString() }
+    await addUserAchievement(user.uid, item)
+    await refreshProfile()
+    setProfile(p => ({ ...p, achievements: [...(p.achievements || []), item] }))
+    setAchievementForm({ title: '', description: '' })
+    setShowAchievementForm(false)
+    setSavingItem(false)
+  }
+
+  const handleAddProject = async () => {
+    if (!projectForm.title.trim() || savingItem) return
+    setSavingItem(true)
+    const item = { title: projectForm.title.trim(), description: projectForm.description.trim(), link: projectForm.link.trim(), tech: projectForm.tech.trim(), addedAt: new Date().toISOString() }
+    await addUserProject(user.uid, item)
+    await refreshProfile()
+    setProfile(p => ({ ...p, projects: [...(p.projects || []), item] }))
+    setProjectForm({ title: '', description: '', link: '', tech: '' })
+    setShowProjectForm(false)
+    setSavingItem(false)
+  }
+
+  const handleAddCollab = async () => {
+    if (!collabForm.project.trim() || !collabForm.partnerName.trim() || savingItem) return
+    setSavingItem(true)
+    const item = { project: collabForm.project.trim(), partnerName: collabForm.partnerName.trim(), role: collabForm.role.trim() || 'Collaborator' }
+    await addUserCollaboration(user.uid, item)
+    await refreshProfile()
+    setProfile(p => ({ ...p, collaborationHistory: [...(p.collaborationHistory || []), item] }))
+    setCollabForm({ project: '', partnerName: '', role: '' })
+    setShowCollabForm(false)
+    setSavingItem(false)
   }
 
   if (loading) return (
@@ -340,33 +388,6 @@ export default function Profile() {
         </motion.div>
       )}
 
-      {/* ── Team history ───────────────────────────────────── */}
-      {profile.collaborationHistory?.length > 0 && (
-        <motion.div variants={staggerItem} className="card">
-          <h2 className="font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <Users className="w-4 h-4" style={{ color: '#10b981' }} /> Team History
-          </h2>
-          <div className="space-y-3">
-            {profile.collaborationHistory.map((collab, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ x: 2 }} transition={spring.snappy}
-                className="flex justify-between items-center p-3 rounded-xl"
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
-              >
-                <div>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{collab.project}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>with {collab.partnerName}</p>
-                </div>
-                <span className="badge" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
-                  {collab.role}
-                </span>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
       {/* ── Badges ─────────────────────────────────────────── */}
       {profileBadges.length > 0 && (
         <motion.div variants={staggerItem} className="card">
@@ -392,32 +413,177 @@ export default function Profile() {
         </motion.div>
       )}
 
-      {/* ── Stats ──────────────────────────────────────────── */}
-      <motion.div variants={staggerItem} className="grid grid-cols-3 gap-4">
-        {[
-          { icon: Trophy, label: 'Achievements', value: profile.achievements?.length || 0 },
-          { icon: Code2, label: 'Projects', value: profile.projects?.length || 0 },
-          { icon: Users, label: 'Collaborations', value: profile.collaborationHistory?.length || 0 },
-        ].map(({ icon: Icon, label, value }, i) => (
-          <motion.div
-            key={label}
-            whileHover={{ y: -3, boxShadow: 'var(--shadow-md)' }}
-            transition={spring.smooth}
-            className="card text-center"
-          >
-            <Icon className="w-5 h-5 mx-auto mb-2" style={{ color: 'var(--text-tertiary)' }} />
-            <motion.p
-              initial={{ scale: 1.3, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ ...spring.bouncy, delay: 0.3 + i * 0.07 }}
-              className="text-2xl font-bold"
-              style={{ color: 'var(--text-primary)', letterSpacing: '-0.04em' }}
-            >
-              {value}
-            </motion.p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
-          </motion.div>
-        ))}
+      {/* ── Achievements ────────────────────────────────────── */}
+      <motion.div variants={staggerItem} className="card">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <Trophy className="w-4 h-4" style={{ color: '#f59e0b' }} /> Achievements
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-secondary)', color: 'var(--text-tertiary)' }}>
+              {profile.achievements?.length || 0}
+            </span>
+          </h2>
+          {isMe && (
+            <button onClick={() => setShowAchievementForm(s => !s)}
+              className="btn-secondary py-1 text-xs flex items-center gap-1">
+              <Plus className="w-3.5 h-3.5" /> Add
+            </button>
+          )}
+        </div>
+        <AnimatePresence>
+          {showAchievementForm && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              className="mb-3 space-y-2" style={{ overflow: 'hidden' }}>
+              <input value={achievementForm.title} onChange={e => setAchievementForm(f => ({ ...f, title: e.target.value }))}
+                placeholder="Achievement title *" className="input-field text-sm" />
+              <textarea value={achievementForm.description} onChange={e => setAchievementForm(f => ({ ...f, description: e.target.value }))}
+                placeholder="Description (optional)" rows={2} className="input-field resize-none text-sm" />
+              <div className="flex gap-2">
+                <button onClick={() => setShowAchievementForm(false)} className="btn-secondary flex-1 text-xs py-1.5">Cancel</button>
+                <button onClick={handleAddAchievement} disabled={!achievementForm.title.trim() || savingItem}
+                  className="btn-primary flex-1 text-xs py-1.5 flex items-center justify-center gap-1">
+                  {savingItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null} Save
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {profile.achievements?.length > 0 ? (
+          <div className="space-y-2">
+            {profile.achievements.map((a, i) => (
+              <div key={i} className="p-3 rounded-xl" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{a.title || a}</p>
+                {a.description && <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{a.description}</p>}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>No achievements yet.{isMe ? ' Add your first one!' : ''}</p>
+        )}
+      </motion.div>
+
+      {/* ── Projects ────────────────────────────────────────── */}
+      <motion.div variants={staggerItem} className="card">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <Code2 className="w-4 h-4" style={{ color: '#3b82f6' }} /> Projects
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-secondary)', color: 'var(--text-tertiary)' }}>
+              {profile.projects?.length || 0}
+            </span>
+          </h2>
+          {isMe && (
+            <button onClick={() => setShowProjectForm(s => !s)}
+              className="btn-secondary py-1 text-xs flex items-center gap-1">
+              <Plus className="w-3.5 h-3.5" /> Add
+            </button>
+          )}
+        </div>
+        <AnimatePresence>
+          {showProjectForm && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              className="mb-3 space-y-2" style={{ overflow: 'hidden' }}>
+              <input value={projectForm.title} onChange={e => setProjectForm(f => ({ ...f, title: e.target.value }))}
+                placeholder="Project name *" className="input-field text-sm" />
+              <textarea value={projectForm.description} onChange={e => setProjectForm(f => ({ ...f, description: e.target.value }))}
+                placeholder="What does it do?" rows={2} className="input-field resize-none text-sm" />
+              <input value={projectForm.link} onChange={e => setProjectForm(f => ({ ...f, link: e.target.value }))}
+                placeholder="Link (GitHub, deployed URL, etc.)" className="input-field text-sm" />
+              <input value={projectForm.tech} onChange={e => setProjectForm(f => ({ ...f, tech: e.target.value }))}
+                placeholder="Tech stack (e.g. React, Node, Firebase)" className="input-field text-sm" />
+              <div className="flex gap-2">
+                <button onClick={() => setShowProjectForm(false)} className="btn-secondary flex-1 text-xs py-1.5">Cancel</button>
+                <button onClick={handleAddProject} disabled={!projectForm.title.trim() || savingItem}
+                  className="btn-primary flex-1 text-xs py-1.5 flex items-center justify-center gap-1">
+                  {savingItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null} Save
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {profile.projects?.length > 0 ? (
+          <div className="space-y-2">
+            {profile.projects.map((p, i) => (
+              <div key={i} className="p-3 rounded-xl" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{p.title || p}</p>
+                    {p.description && <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{p.description}</p>}
+                    {p.tech && <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>{p.tech}</p>}
+                  </div>
+                  {p.link && (
+                    <a href={p.link} target="_blank" rel="noreferrer"
+                      className="text-xs flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}
+                      onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                      onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
+                      <Github className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>No projects yet.{isMe ? ' Add your first one!' : ''}</p>
+        )}
+      </motion.div>
+
+      {/* ── Team history ───────────────────────────────────── */}
+      <motion.div variants={staggerItem} className="card">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <Users className="w-4 h-4" style={{ color: '#10b981' }} /> Collaborations
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-secondary)', color: 'var(--text-tertiary)' }}>
+              {profile.collaborationHistory?.length || 0}
+            </span>
+          </h2>
+          {isMe && (
+            <button onClick={() => setShowCollabForm(s => !s)}
+              className="btn-secondary py-1 text-xs flex items-center gap-1">
+              <Plus className="w-3.5 h-3.5" /> Add
+            </button>
+          )}
+        </div>
+        <AnimatePresence>
+          {showCollabForm && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              className="mb-3 space-y-2" style={{ overflow: 'hidden' }}>
+              <input value={collabForm.project} onChange={e => setCollabForm(f => ({ ...f, project: e.target.value }))}
+                placeholder="Project name *" className="input-field text-sm" />
+              <input value={collabForm.partnerName} onChange={e => setCollabForm(f => ({ ...f, partnerName: e.target.value }))}
+                placeholder="Partner / teammate name *" className="input-field text-sm" />
+              <input value={collabForm.role} onChange={e => setCollabForm(f => ({ ...f, role: e.target.value }))}
+                placeholder="Your role (e.g. Frontend, ML Engineer)" className="input-field text-sm" />
+              <div className="flex gap-2">
+                <button onClick={() => setShowCollabForm(false)} className="btn-secondary flex-1 text-xs py-1.5">Cancel</button>
+                <button onClick={handleAddCollab} disabled={!collabForm.project.trim() || !collabForm.partnerName.trim() || savingItem}
+                  className="btn-primary flex-1 text-xs py-1.5 flex items-center justify-center gap-1">
+                  {savingItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null} Save
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {profile.collaborationHistory?.length > 0 ? (
+          <div className="space-y-3">
+            {profile.collaborationHistory.map((collab, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ x: 2 }} transition={spring.snappy}
+                className="flex justify-between items-center p-3 rounded-xl"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{collab.project}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>with {collab.partnerName}</p>
+                </div>
+                <span className="badge" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  {collab.role}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>No collaborations yet.{isMe ? ' Add your first one!' : ''}</p>
+        )}
       </motion.div>
     </motion.div>
   )

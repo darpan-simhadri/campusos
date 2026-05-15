@@ -62,7 +62,7 @@ function FeatureButton({ item, onNavigate }) {
     <motion.button
       onClick={() => onNavigate(path)}
       className="flex flex-col items-center gap-2 p-3 rounded-2xl"
-      style={{ background: '#1C1C1C', border: '1px solid #2a2a2a' }}
+      style={{ background: 'var(--bg-card)', border: '1px solid #2a2a2a' }}
       whileTap={{ scale: 0.92 }}
       transition={spring.snappy}
     >
@@ -72,7 +72,7 @@ function FeatureButton({ item, onNavigate }) {
       >
         <Icon className="w-5 h-5" style={{ color }} />
       </div>
-      <span style={{ color: '#ccc', fontSize: '0.62rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.3, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+      <span style={{ color: 'var(--text-secondary)', fontSize: '0.62rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.3, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
         {label}
       </span>
     </motion.button>
@@ -90,12 +90,12 @@ export default function More() {
   }
 
   return (
-    <div style={{ background: '#000000', minHeight: '100%' }}>
+    <div style={{ background: 'var(--bg-app)', minHeight: '100%' }}>
       {/* Profile strip */}
       <motion.button
         onClick={() => navigate(`/profile/${profile?.uid}`)}
         className="flex items-center gap-3 w-full px-4 py-4"
-        style={{ borderBottom: '1px solid #1C1C1C' }}
+        style={{ borderBottom: '1px solid var(--border)' }}
         whileTap={{ scale: 0.99 }}
       >
         <div
@@ -110,7 +110,7 @@ export default function More() {
           }
         </div>
         <div className="flex-1 text-left">
-          <p style={{ color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '1rem', letterSpacing: '0.03em' }}>
+          <p style={{ color: 'var(--text-primary)', fontFamily: 'Anton, sans-serif', fontSize: '1rem', letterSpacing: '0.03em' }}>
             {profile?.fullName?.toUpperCase() || 'USER'}
           </p>
           <p style={{ color: '#666', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
@@ -120,31 +120,31 @@ export default function More() {
       </motion.button>
 
       {/* Quick actions row */}
-      <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #1C1C1C' }}>
+      <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
         <motion.button
           onClick={() => navigate('/store')}
           className="flex items-center gap-2 flex-1 rounded-xl px-3 py-2.5"
-          style={{ background: '#1C1C1C', border: '1px solid #2a2a2a' }}
+          style={{ background: 'var(--bg-card)', border: '1px solid #2a2a2a' }}
           whileTap={{ scale: 0.96 }}
           transition={spring.snappy}
         >
           <ShoppingBag className="w-4 h-4" style={{ color: '#C8F135' }} />
-          <span style={{ color: '#ccc', fontSize: '0.78rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.04em' }}>STORE</span>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.04em' }}>STORE</span>
         </motion.button>
         <motion.button
           onClick={() => navigate('/admin')}
           className="flex items-center gap-2 flex-1 rounded-xl px-3 py-2.5"
-          style={{ background: '#1C1C1C', border: '1px solid #2a2a2a' }}
+          style={{ background: 'var(--bg-card)', border: '1px solid #2a2a2a' }}
           whileTap={{ scale: 0.96 }}
           transition={spring.snappy}
         >
           <Shield className="w-4 h-4" style={{ color: '#E040FB' }} />
-          <span style={{ color: '#ccc', fontSize: '0.78rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.04em' }}>ADMIN</span>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.04em' }}>ADMIN</span>
         </motion.button>
         <motion.button
           onClick={toggleTheme}
           className="flex items-center gap-2 flex-1 rounded-xl px-3 py-2.5"
-          style={{ background: '#1C1C1C', border: '1px solid #2a2a2a' }}
+          style={{ background: 'var(--bg-card)', border: '1px solid #2a2a2a' }}
           whileTap={{ scale: 0.96 }}
           transition={spring.snappy}
         >
@@ -152,7 +152,7 @@ export default function More() {
             ? <Sun  className="w-4 h-4" style={{ color: '#FFD700' }} />
             : <Moon className="w-4 h-4" style={{ color: '#8B5CF6' }} />
           }
-          <span style={{ color: '#ccc', fontSize: '0.78rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.04em' }}>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.04em' }}>
             {isDark ? 'LIGHT' : 'DARK'}
           </span>
         </motion.button>
@@ -184,7 +184,7 @@ export default function More() {
         <motion.button
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 rounded-2xl py-4"
-          style={{ background: '#1C1C1C', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontFamily: 'Anton, sans-serif', letterSpacing: '0.06em', fontSize: '0.9rem' }}
+          style={{ background: 'var(--bg-card)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontFamily: 'Anton, sans-serif', letterSpacing: '0.06em', fontSize: '0.9rem' }}
           whileTap={{ scale: 0.98 }}
           transition={spring.snappy}
         >

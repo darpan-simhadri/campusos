@@ -114,7 +114,7 @@ function NewsDetailSheet({ item, color, onClose }) {
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 260 }}
         className="w-full max-w-lg rounded-t-3xl overflow-hidden"
-        style={{ background: '#111', border: `1px solid ${color}30` }}
+        style={{ background: 'var(--bg-secondary)', border: `1px solid ${color}30` }}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
@@ -192,7 +192,7 @@ function AINewsScroll({ items }) {
               transition={{ delay: i * 0.07 }}
               onClick={() => setSelected(item)}
               className="flex-shrink-0 rounded-2xl p-3 flex flex-col gap-2 text-left cursor-pointer"
-              style={{ width: 200, background: '#1C1C1C', border: `1px solid ${c}30` }}
+              style={{ width: 200, background: 'var(--bg-card)', border: `1px solid ${c}30` }}
               whileTap={{ scale: 0.97 }}
             >
               <div className="flex items-center justify-between">
@@ -290,7 +290,7 @@ function HotTakeCard({ post }) {
     setVoted(side)
     if (side === 'agree')    setAgree(a => a + 1)
     if (side === 'disagree') setDisagree(d => d + 1)
-    if (user?.uid && post.id && !post.id.startsWith('mock')) {
+    if (user?.uid && post.id) {
       voteHotTake(post.id, user.uid, side)
     }
     if (user?.uid) {
@@ -302,7 +302,7 @@ function HotTakeCard({ post }) {
   const agreePct = Math.round((agree / total) * 100)
 
   return (
-    <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: '#1C1C1C', border: '1px solid #FF6B0030' }}>
+    <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: 'var(--bg-card)', border: '1px solid #FF6B0030' }}>
       {/* Header */}
       <div className="flex items-center gap-2">
         <Avatar name={post.authorName} color={specColors[post.authorSpec] || '#C8F135'} image={post.authorImage} />
@@ -378,7 +378,7 @@ function PaperDecodedCard({ post }) {
   }
 
   return (
-    <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: '#1C1C1C', border: '1px solid #FFD70030' }}>
+    <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: 'var(--bg-card)', border: '1px solid #FFD70030' }}>
       {/* Header */}
       <div className="flex items-center gap-2">
         <Avatar name={post.authorName} color={specColors[post.authorSpec] || '#C8F135'} image={post.authorImage} />
@@ -394,7 +394,7 @@ function PaperDecodedCard({ post }) {
 
       {/* Paper title */}
       {post.paperTitle && (
-        <div className="rounded-xl p-3" style={{ background: '#111', border: '1px solid #FFD70020' }}>
+        <div className="rounded-xl p-3" style={{ background: 'var(--bg-secondary)', border: '1px solid #FFD70020' }}>
           <p className="text-xs text-neutral-500 mb-0.5">Paper</p>
           <p className="text-white text-sm font-bold leading-snug">{post.paperTitle}</p>
         </div>
@@ -453,7 +453,7 @@ function DuelResultCard({ post }) {
   const isHTML = post.duelType === 'build_race'
 
   return (
-    <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: '#1C1C1C', border: '1px solid #C8F13520' }}>
+    <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: 'var(--bg-card)', border: '1px solid #C8F13520' }}>
       <div className="flex items-center gap-2">
         <Avatar name={post.authorName} color={specColors[post.authorSpec] || '#C8F135'} image={post.authorImage} />
         <div>
@@ -514,7 +514,7 @@ function StandardCard({ post }) {
   }
 
   return (
-    <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: '#1C1C1C', border: '1px solid #2a2a2a' }}>
+    <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-2">
         <Avatar name={post.authorName} color={specColors[post.authorSpec] || '#888'} image={post.authorImage} />
         <div>
@@ -581,7 +581,7 @@ function NewPostModal({ onClose, onPost }) {
         initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 260 }}
         className="w-full max-w-lg rounded-t-2xl overflow-hidden"
-        style={{ background: '#111' }}
+        style={{ background: 'var(--bg-secondary)' }}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
           <p className="font-bold text-white text-sm" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: 1 }}>NEW POST</p>
@@ -622,7 +622,7 @@ function NewPostModal({ onClose, onPost }) {
             }
             autoFocus
             className="w-full rounded-xl p-3 text-sm text-white resize-none outline-none"
-            style={{ background: '#1C1C1C', border: '1px solid #333', minHeight: 120 }}
+            style={{ background: 'var(--bg-card)', border: '1px solid #333', minHeight: 120 }}
           />
 
           <button onClick={handlePost} disabled={!content.trim() || posting}
@@ -681,7 +681,7 @@ export default function Feed() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen pb-24" style={{ background: '#000' }}>
+    <div className="flex flex-col min-h-screen pb-24" style={{ background: 'var(--bg-app)' }}>
 
       {/* AI news scroll */}
       <AINewsScroll items={aiNews} />

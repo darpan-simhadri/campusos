@@ -27,6 +27,15 @@ export const getDocument = async (col, id) => {
 export const updateUserProfile = (uid, data) =>
   updateDoc(doc(db, 'users', uid), data)
 
+export const addUserAchievement = (uid, achievement) =>
+  updateDoc(doc(db, 'users', uid), { achievements: arrayUnion(achievement) })
+
+export const addUserProject = (uid, project) =>
+  updateDoc(doc(db, 'users', uid), { projects: arrayUnion(project) })
+
+export const addUserCollaboration = (uid, collab) =>
+  updateDoc(doc(db, 'users', uid), { collaborationHistory: arrayUnion(collab) })
+
 export const getAllUsers = async (filters = {}) => {
   let q = collection(db, 'users')
   const constraints = []
@@ -753,20 +762,23 @@ export const subscribeToFeed = (callback) => {
 }
 
 export const celebratePost = (postId, uid) =>
-  updateDoc(doc(db, 'feedPosts', postId), { celebrations: arrayUnion(uid) })
+  setDoc(doc(db, 'feedPosts', postId), { celebrations: arrayUnion(uid) }, { merge: true })
 
 export const uncelebratePost = (postId, uid) =>
-  updateDoc(doc(db, 'feedPosts', postId), { celebrations: arrayRemove(uid) })
+  setDoc(doc(db, 'feedPosts', postId), { celebrations: arrayRemove(uid) }, { merge: true })
 
 export const voteHotTake = (postId, uid, side) => {
   const field = side === 'agree' ? 'agrees' : 'disagrees'
-  return updateDoc(doc(db, 'feedPosts', postId), { [field]: arrayUnion(uid) })
+  return setDoc(doc(db, 'feedPosts', postId), { [field]: arrayUnion(uid) }, { merge: true })
 }
 
 // ─── Campus Problems ──────────────────────────────────────────────────────────
 
 export const voteCampusProblem = (problemId, uid) =>
   setDoc(doc(db, 'campusProblems', problemId), { voters: arrayUnion(uid) }, { merge: true })
+
+export const unvoteCampusProblem = (problemId, uid) =>
+  setDoc(doc(db, 'campusProblems', problemId), { voters: arrayRemove(uid) }, { merge: true })
 
 export const submitCampusSolution = (problemId, uid, authorName, solution) =>
   addDoc(collection(db, 'campusProblems', problemId, 'solutions'), {

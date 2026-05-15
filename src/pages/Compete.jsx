@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
-import { awardXP, voteCampusProblem, submitCampusSolution } from '../services/firebaseService'
+import { awardXP, voteCampusProblem, unvoteCampusProblem, submitCampusSolution } from '../services/firebaseService'
 
 // ─── SEASON DATA ────────────────────────────────────────────────────────────
 const SEASON = {
@@ -159,7 +159,7 @@ function IdentityPanel({ tracks }) {
                 </div>
                 <span className="text-xs font-mono font-bold" style={{ color: t.color }}>{t.pct}%</span>
               </div>
-              <div className="w-full h-2 rounded-full" style={{ background: '#1C1C1C' }}>
+              <div className="w-full h-2 rounded-full" style={{ background: 'var(--bg-card)' }}>
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${t.pct}%` }}
@@ -182,24 +182,33 @@ function IdentityPanel({ tracks }) {
 // ─── Campus Problems panel ────────────────────────────────────────────────────
 function CampusProblemsPanel() {
   const { user, profile } = useAuth()
-  const [selected, setSelected]   = useState(null)
-  const [solution, setSolution]   = useState('')
-  const [submitted, setSubmitted] = useState(new Set())
-  const [voted, setVoted]         = useState(new Set())
-  const [problems, setProblems]   = useState(CAMPUS_PROBLEMS)
+  const [selected, setSelected]         = useState(null)
+  const [solution, setSolution]         = useState('')
+  const [submitted, setSubmitted]       = useState(new Set())
+  const [submittedSolutions, setSubmittedSolutions] = useState({})
+  const [voted, setVoted]               = useState(new Set())
+  const [problems, setProblems]         = useState(CAMPUS_PROBLEMS)
 
   function handleVote(id) {
-    if (voted.has(id)) return
-    setVoted(v => new Set([...v, id]))
-    setProblems(ps => ps.map(p => p.id === id ? { ...p, votes: p.votes + 1 } : p))
-    if (user?.uid) voteCampusProblem(id, user.uid)
+    const isVoted = voted.has(id)
+    if (isVoted) {
+      setVoted(v => { const next = new Set(v); next.delete(id); return next })
+      setProblems(ps => ps.map(p => p.id === id ? { ...p, votes: Math.max(0, p.votes - 1) } : p))
+      if (user?.uid) unvoteCampusProblem(id, user.uid)
+    } else {
+      setVoted(v => new Set([...v, id]))
+      setProblems(ps => ps.map(p => p.id === id ? { ...p, votes: p.votes + 1 } : p))
+      if (user?.uid) voteCampusProblem(id, user.uid)
+    }
   }
 
   function handleSubmitSolution(id) {
     if (!solution.trim()) return
+    const text = solution.trim()
     setSubmitted(s => new Set([...s, id]))
+    setSubmittedSolutions(m => ({ ...m, [id]: text }))
     setProblems(ps => ps.map(p => p.id === id ? { ...p, solutions: p.solutions + 1 } : p))
-    if (user?.uid) submitCampusSolution(id, user.uid, profile?.fullName || 'Anonymous', solution)
+    if (user?.uid) submitCampusSolution(id, user.uid, profile?.fullName || 'Anonymous', text)
     setSolution('')
     setSelected(null)
   }
@@ -214,7 +223,7 @@ function CampusProblemsPanel() {
 
       {problems.sort((a, b) => b.votes - a.votes).map(p => (
         <div key={p.id} className="rounded-2xl p-4 flex flex-col gap-3"
-          style={{ background: '#1C1C1C', border: `1px solid ${p.color}30` }}>
+          style={{ background: 'var(--bg-card)', border: `1px solid ${p.color}30` }}>
           <div className="flex items-start gap-3">
             <Tag label={p.tag} color={p.color} />
             <span className="text-xs text-neutral-600 ml-auto flex-shrink-0">{p.deadline}</span>
@@ -233,7 +242,7 @@ function CampusProblemsPanel() {
             <button onClick={() => handleVote(p.id)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
               style={{
-                background: voted.has(p.id) ? `${p.color}20` : '#2a2a2a',
+                background: voted.has(p.id) ? `${p.color}20` : 'var(--border-strong)',
                 color:      voted.has(p.id) ? p.color          : '#888',
                 fontFamily: 'Barlow Condensed, sans-serif',
               }}>
@@ -252,7 +261,14 @@ function CampusProblemsPanel() {
               </div>
             )}
           </div>
-
+          {submitted.has(p.id) && submittedSolutions[p.id] && (
+            <div className="rounded-xl p-3" style={{ background: '#0d1a00', border: '1px solid #C8F13520' }}>
+              <p className="text-xs font-bold mb-1" style={{ color: '#C8F135', fontFamily: 'Barlow Condensed, sans-serif' }}>Your solution:</p>
+              <p className="text-xs leading-relaxed" style={{ color: '#aaa', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
+                {submittedSolutions[p.id]}
+              </p>
+            </div>
+          )}
           <AnimatePresence>
             {selected === p.id && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
@@ -294,7 +310,7 @@ function SpecWarsPanel({ mySpec }) {
   return (
     <div className="flex flex-col gap-4">
       {/* Current challenge */}
-      <div className="rounded-2xl p-4" style={{ background: '#1C1C1C', border: '1px solid #C8F13530' }}>
+      <div className="rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid #C8F13530' }}>
         <div className="flex items-center justify-between mb-2">
           <Tag label={SPEC_WAR.week} color="#C8F135" />
           <span className="text-xs text-neutral-600">Ends in {SPEC_WAR.endsIn}</span>
@@ -315,7 +331,7 @@ function SpecWarsPanel({ mySpec }) {
               <div key={role.spec} className="rounded-xl p-3"
                 style={{
                   background: isMe ? `${role.color}12` : '#1C1C1C',
-                  border:     `1px solid ${isMe ? role.color + '50' : '#2a2a2a'}`,
+                  border:     `1px solid ${isMe ? role.color + '50' : 'var(--border-strong)'}`,
                 }}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs font-mono font-bold text-neutral-600">#{idx + 1}</span>
@@ -326,7 +342,7 @@ function SpecWarsPanel({ mySpec }) {
                   <span className="ml-auto text-xs font-mono font-bold text-white">{role.score} pts</span>
                   <span className="text-xs text-neutral-600">{role.done} done</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full" style={{ background: '#2a2a2a' }}>
+                <div className="w-full h-1.5 rounded-full" style={{ background: 'var(--border-strong)' }}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(role.score / maxScore) * 100}%` }}
@@ -395,7 +411,7 @@ function BountiesPanel() {
       {/* Post a bounty */}
       <button onClick={() => setShowPost(s => !s)}
         className="w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
-        style={{ background: '#1C1C1C', border: '1px solid #C8F13530', color: '#C8F135',
+        style={{ background: 'var(--bg-card)', border: '1px solid #C8F13530', color: '#C8F135',
           fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: 1 }}>
         <Plus size={15} /> POST A BOUNTY
       </button>
@@ -404,7 +420,7 @@ function BountiesPanel() {
         {showPost && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             style={{ overflow: 'hidden' }}>
-            <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: '#1C1C1C', border: '1px solid #C8F13540' }}>
+            <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: 'var(--bg-card)', border: '1px solid #C8F13540' }}>
               <input value={newBounty.title} onChange={e => setNewBounty(b => ({ ...b, title: e.target.value }))}
                 placeholder="What do you need help with?"
                 className="w-full rounded-xl px-3 py-2 text-sm text-white outline-none"
@@ -431,7 +447,7 @@ function BountiesPanel() {
 
       {bounties.map(b => (
         <div key={b.id} className="rounded-2xl p-4 flex flex-col gap-3"
-          style={{ background: '#1C1C1C', border: `1px solid ${b.claimed || claimed.has(b.id) ? '#2a2a2a' : b.color + '30'}`,
+          style={{ background: 'var(--bg-card)', border: `1px solid ${b.claimed || claimed.has(b.id) ? 'var(--border-strong)' : b.color + '30'}`,
             opacity: b.claimed || claimed.has(b.id) ? 0.6 : 1 }}>
           <div className="flex items-start justify-between gap-2">
             <Tag label={b.tag} color={b.color} />
@@ -483,7 +499,7 @@ export default function Compete() {
   const identityTracks = useMemo(() => computeIdentity(duelHistory), [duelHistory])
 
   return (
-    <div style={{ background: '#000000', minHeight: '100%' }}>
+    <div style={{ background: 'var(--bg-app)', minHeight: '100%' }}>
 
       {/* Season strip */}
       <div className="px-4 pt-4 pb-3 border-b border-neutral-900">
@@ -505,7 +521,7 @@ export default function Compete() {
         {/* Season stats row */}
         <div className="grid grid-cols-4 gap-2">
           {SEASON.stats.map(s => (
-            <div key={s.label} className="rounded-xl p-2 text-center" style={{ background: '#1C1C1C' }}>
+            <div key={s.label} className="rounded-xl p-2 text-center" style={{ background: 'var(--bg-card)' }}>
               <p className="text-base">{s.icon}</p>
               <p className="text-xs font-mono font-bold text-white">{s.value}</p>
               <p className="text-xs text-neutral-600" style={{ fontSize: 9 }}>{s.label}</p>

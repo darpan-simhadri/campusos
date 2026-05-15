@@ -49,7 +49,7 @@ function EventCard({ event, myUid }) {
     <motion.div
       variants={staggerItem}
       className="rounded-2xl overflow-hidden"
-      style={{ background: '#1C1C1C', border: `1px solid ${isPast ? '#2a2a2a' : '#2a2a2a'}`, opacity: isPast ? 0.6 : 1 }}
+      style={{ background: 'var(--bg-card)', border: `1px solid ${isPast ? 'var(--border)' : 'var(--border)'}`, opacity: isPast ? 0.6 : 1 }}
     >
       {/* Color strip */}
       <div className="h-1.5" style={{ background: type.color }} />
@@ -70,7 +70,7 @@ function EventCard({ event, myUid }) {
             <span
               className="rounded-full px-2 py-0.5 flex-shrink-0"
               style={{
-                background: days === 'Today!' ? 'rgba(200,241,53,0.15)' : '#2a2a2a',
+                background: days === 'Today!' ? 'rgba(200,241,53,0.15)' : 'var(--border)',
                 color: days === 'Today!' ? '#C8F135' : '#888',
                 fontSize: '0.6rem',
                 fontWeight: 700,
@@ -83,7 +83,7 @@ function EventCard({ event, myUid }) {
         </div>
 
         {/* Title */}
-        <h3 style={{ color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '1.1rem', letterSpacing: '0.03em', marginBottom: 6 }}>
+        <h3 style={{ color: 'var(--text-primary)', fontFamily: 'Anton, sans-serif', fontSize: '1.1rem', letterSpacing: '0.03em', marginBottom: 6 }}>
           {event.title}
         </h3>
         {event.description && (
@@ -96,23 +96,23 @@ function EventCard({ event, myUid }) {
         <div className="space-y-2 mb-4">
           <div className="flex items-center gap-2">
             <Calendar className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#555' }} />
-            <span style={{ color: '#ccc', fontSize: '0.75rem' }}>{formatDate(event.eventDate)}</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{formatDate(event.eventDate)}</span>
           </div>
           {event.time && (
             <div className="flex items-center gap-2">
               <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#555' }} />
-              <span style={{ color: '#ccc', fontSize: '0.75rem' }}>{event.time}</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{event.time}</span>
             </div>
           )}
           {event.venue && (
             <div className="flex items-center gap-2">
               <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#555' }} />
-              <span style={{ color: '#ccc', fontSize: '0.75rem' }}>{event.venue}</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{event.venue}</span>
             </div>
           )}
           <div className="flex items-center gap-2">
             <Users className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#555' }} />
-            <span style={{ color: '#ccc', fontSize: '0.75rem' }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
               {event.rsvps?.length || 0} going
               {event.maxAttendees ? ` / ${event.maxAttendees} max` : ''}
             </span>
@@ -180,10 +180,10 @@ function CreateEventModal({ onClose }) {
         exit={{ y: 80 }}
         transition={spring.smooth}
         className="w-full rounded-t-3xl p-5 overflow-y-auto"
-        style={{ background: '#111', border: '1px solid #2a2a2a', maxWidth: 480, maxHeight: '90vh' }}
+        style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', maxWidth: 480, maxHeight: '90vh' }}
       >
         <div className="flex items-center justify-between mb-4">
-          <span style={{ fontFamily: 'Anton, sans-serif', color: '#fff', fontSize: '1.1rem', letterSpacing: '0.04em' }}>CREATE EVENT</span>
+          <span style={{ fontFamily: 'Anton, sans-serif', color: 'var(--text-primary)', fontSize: '1.1rem', letterSpacing: '0.04em' }}>CREATE EVENT</span>
           <button onClick={onClose} style={{ color: '#666' }}><X className="w-5 h-5" /></button>
         </div>
 
@@ -197,7 +197,7 @@ function CreateEventModal({ onClose }) {
               style={{
                 background: form.type === t.id ? t.color : '#1C1C1C',
                 color: form.type === t.id ? '#000' : '#888',
-                border: `1px solid ${form.type === t.id ? t.color : '#2a2a2a'}`,
+                border: `1px solid ${form.type === t.id ? t.color : 'var(--border)'}`,
                 fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '0.78rem',
               }}
             >
@@ -221,7 +221,7 @@ function CreateEventModal({ onClose }) {
               value={form[f.k]}
               onChange={set(f.k)}
               className="w-full rounded-xl px-3 py-2.5 outline-none"
-              style={{ background: '#1C1C1C', border: '1px solid #2a2a2a', color: '#fff', fontSize: '0.85rem' }}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
             />
           ))}
           <textarea
@@ -230,7 +230,7 @@ function CreateEventModal({ onClose }) {
             onChange={set('description')}
             rows={3}
             className="w-full rounded-xl px-3 py-2.5 resize-none outline-none"
-            style={{ background: '#1C1C1C', border: '1px solid #2a2a2a', color: '#fff', fontSize: '0.85rem' }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
           />
         </div>
 
@@ -285,9 +285,9 @@ export default function Events() {
   })
 
   return (
-    <div style={{ background: '#000000', minHeight: '100%' }}>
+    <div style={{ background: 'var(--bg-app)', minHeight: '100%' }}>
       <div className="flex items-center justify-between px-4 pt-5 pb-3">
-        <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.6rem', color: '#fff', letterSpacing: '0.03em' }}>
+        <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.6rem', color: 'var(--text-primary)', letterSpacing: '0.03em' }}>
           CAMPUS EVENTS
         </h1>
         <motion.button
@@ -311,7 +311,7 @@ export default function Events() {
               background: filter === f.id ? '#C8F135' : '#1C1C1C',
               color: filter === f.id ? '#000' : '#666',
               fontFamily: 'Anton, sans-serif', fontSize: '0.7rem', letterSpacing: '0.04em',
-              border: `1px solid ${filter === f.id ? '#C8F135' : '#2a2a2a'}`,
+              border: `1px solid ${filter === f.id ? '#C8F135' : 'var(--border)'}`,
             }}
           >
             {f.label}
@@ -321,7 +321,7 @@ export default function Events() {
 
       {loading ? (
         <div className="px-4 space-y-3">
-          {[1,2,3].map(i => <div key={i} className="rounded-2xl h-48 animate-pulse" style={{ background: '#1C1C1C' }} />)}
+          {[1,2,3].map(i => <div key={i} className="rounded-2xl h-48 animate-pulse" style={{ background: 'var(--bg-card)' }} />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center gap-4">
