@@ -761,6 +761,71 @@ export const subscribeToFeed = (callback) => {
   )
 }
 
+// ─── Feed Comments ────────────────────────────────────────────────────────────
+
+export const addFeedComment = (postId, authorName, text) =>
+  addDoc(collection(db, 'feedPosts', postId, 'comments'), {
+    authorName,
+    text,
+    createdAt: serverTimestamp(),
+  })
+
+export const subscribeToFeedComments = (postId, callback) => {
+  const q = query(
+    collection(db, 'feedPosts', postId, 'comments'),
+    orderBy('createdAt', 'asc')
+  )
+  return onSnapshot(q, snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+  )
+}
+
+// ─── Seed Feed Posts ──────────────────────────────────────────────────────────
+
+export const seedFeedPosts = async () => {
+  const posts = [
+    {
+      type: 'hot_take',
+      authorName: 'Arjun M', authorSpec: 'AIML',
+      content: 'Python will be obsolete in 5 years because AI will write all the code anyway. Learn prompt engineering, not syntax.',
+      agrees: [], disagrees: [], celebrations: [],
+      createdAt: serverTimestamp(),
+    },
+    {
+      type: 'text',
+      authorName: 'Neha S', authorSpec: 'AIDA',
+      content: 'Just finished my first DSA Duel — solved Two Sum in 3 minutes! The Monaco Editor is 🔥 The opponent barely made it to 40%. Keep grinding everyone!',
+      celebrations: [],
+      createdAt: serverTimestamp(),
+    },
+    {
+      type: 'hot_take',
+      authorName: 'Vijay P', authorSpec: 'Agentic AI',
+      content: 'GPT-4 is actually worse than Claude for coding tasks. Anthropic just has better marketing 😂',
+      agrees: [], disagrees: [], celebrations: [],
+      createdAt: serverTimestamp(),
+    },
+    {
+      type: 'paper_decoded',
+      authorName: 'Karthik R', authorSpec: 'CSE',
+      paperTitle: 'Attention Is All You Need (Vaswani et al., 2017)',
+      content: '• The paper replaces RNNs with a pure attention-based Transformer — no recurrence needed\n• Attention lets every token look at every other token simultaneously, enabling massive parallelism\n• This became the foundation of GPT, BERT, and every modern LLM — the most cited ML paper ever',
+      celebrations: [],
+      createdAt: serverTimestamp(),
+    },
+    {
+      type: 'hot_take',
+      authorName: 'Priya K', authorSpec: 'Gen AI',
+      content: 'Internships are overrated. Build one serious side project and you\'ll get more calls than 10 internships. Fight me.',
+      agrees: [], disagrees: [], celebrations: [],
+      createdAt: serverTimestamp(),
+    },
+  ]
+  for (const post of posts) {
+    await addDoc(collection(db, 'feedPosts'), post)
+  }
+}
+
 export const celebratePost = (postId, uid) =>
   setDoc(doc(db, 'feedPosts', postId), { celebrations: arrayUnion(uid) }, { merge: true })
 

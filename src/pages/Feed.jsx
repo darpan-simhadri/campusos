@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
 import {
   subscribeToFeed, createFeedPost, celebratePost, uncelebratePost, voteHotTake,
+  addFeedComment, subscribeToFeedComments, seedFeedPosts,
 } from '../services/firebaseService'
 import { autoCompleteQuest } from '../lib/autoQuest'
 
@@ -228,17 +229,24 @@ function AINewsScroll({ items }) {
 
 // ─── Comment section ─────────────────────────────────────────────────────────
 function CommentSection({ postId }) {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
   const [comments, setComments] = useState([])
   const [text, setText] = useState('')
+  const [sending, setSending] = useState(false)
 
-  const addComment = () => {
-    if (!text.trim()) return
-    setComments(prev => [...prev, {
-      id: Date.now(), author: profile?.fullName || profile?.name || 'You',
-      text: text.trim(), time: 'just now',
-    }])
+  useEffect(() => {
+    if (!postId) return
+    const unsub = subscribeToFeedComments(postId, setComments)
+    return unsub
+  }, [postId])
+
+  const handleAddComment = async () => {
+    if (!text.trim() || sending) return
+    const author = profile?.fullName || profile?.name || 'You'
+    setSending(true)
     setText('')
+    await addFeedComment(postId, author, text.trim())
+    setSending(false)
   }
 
   return (
@@ -247,12 +255,11 @@ function CommentSection({ postId }) {
         <div key={c.id} className="flex gap-2 items-start">
           <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold"
             style={{ background: '#C8F13530', color: '#C8F135' }}>
-            {c.author[0]}
+            {(c.authorName || 'U')[0]}
           </div>
           <div>
-            <span className="text-xs font-bold text-white">{c.author} </span>
-            <span className="text-xs text-neutral-400">{c.text}</span>
-            <p className="text-xs text-neutral-700 mt-0.5">{c.time}</p>
+            <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{c.authorName} </span>
+            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{c.text}</span>
           </div>
         </div>
       ))}
@@ -260,12 +267,15 @@ function CommentSection({ postId }) {
         <input
           value={text}
           onChange={e => setText(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && addComment()}
+          onKeyDown={e => e.key === 'Enter' && handleAddComment()}
           placeholder="Add a comment..."
-          className="flex-1 rounded-lg px-3 py-1.5 text-xs text-white outline-none"
-          style={{ background: '#2a2a2a', border: '1px solid #333' }}
+          className="flex-1 rounded-lg px-3 py-1.5 text-xs outline-none"
+          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
         />
-        <button onClick={addComment} className="text-neutral-500 hover:text-white"><Send size={13} /></button>
+        <button onClick={handleAddComment} disabled={sending || !text.trim()}
+          style={{ color: text.trim() ? '#C8F135' : 'var(--text-tertiary)' }}>
+          <Send size={13} />
+        </button>
       </div>
     </div>
   )
@@ -654,16 +664,18 @@ export default function Feed() {
     const unsub = subscribeToFeed(posts => {
       setFirestorePosts(posts)
       setLoading(false)
+      // Auto-seed real posts if Firestore is empty so votes/comments persist
+      if (posts.length === 0) {
+        seedFeedPosts()
+      }
     })
     return unsub
   }, [])
 
-  // Merge: real posts first, then mock posts for any not already covered
+  // Use Firestore posts only (seeded on first load so always have real docs)
   const posts = useMemo(() => {
-    if (firestorePosts.length >= 3) return firestorePosts
-    const realIds = new Set(firestorePosts.map(p => p.id))
-    const fill    = MOCK_POSTS.filter(p => !realIds.has(p.id))
-    return [...firestorePosts, ...fill]
+    if (firestorePosts.length > 0) return firestorePosts
+    return MOCK_POSTS  // only while Firestore is still loading
   }, [firestorePosts])
 
   async function handlePost(data) {
