@@ -384,7 +384,7 @@ function PaperDecodedCard({ post }) {
     if (clapped) return
     setClapped(true)
     setClaps(c => c + 1)
-    if (user?.uid && post.id && !post.id.startsWith('mock')) celebratePost(post.id, user.uid)
+    if (user?.uid && post.id) celebratePost(post.id, user.uid)
   }
 
   return (
@@ -458,7 +458,7 @@ function DuelResultCard({ post }) {
     if (clapped) return
     setClapped(true)
     setClaps(c => c + 1)
-    if (user?.uid && post.id && !post.id.startsWith('mock')) celebratePost(post.id, user.uid)
+    if (user?.uid && post.id) celebratePost(post.id, user.uid)
   }
   const isHTML = post.duelType === 'build_race'
 
@@ -520,7 +520,7 @@ function StandardCard({ post }) {
     if (clapped) return
     setClapped(true)
     setClaps(c => c + 1)
-    if (user?.uid && post.id && !post.id.startsWith('mock')) celebratePost(post.id, user.uid)
+    if (user?.uid && post.id) celebratePost(post.id, user.uid)
   }
 
   return (
