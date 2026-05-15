@@ -121,6 +121,19 @@ function fmt(s) {
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
 
+// XP based on how much code was written beyond the starter template
+function computeVibeXP(html, css, js) {
+  const starterLen = STARTER_HTML.length + STARTER_CSS.length + STARTER_JS.length
+  const written    = html.length + css.length + js.length
+  const added      = written - starterLen
+  if (added <= 20)  return 10
+  if (added <= 100) return 25
+  if (added <= 300) return 45
+  if (added <= 600) return 65
+  if (added <= 900) return 80
+  return 90
+}
+
 // ─── Atmospheric particle background ─────────────────────────────────────────
 function AtmosphereParticles({ color }) {
   const particles = Array.from({ length: 16 }, (_, i) => ({
@@ -191,7 +204,7 @@ export default function VibeCodingModal({ onClose }) {
   async function handleSubmit() {
     if (phase === 'done') return
     setPhase('done')
-    const xp = 90
+    const xp = computeVibeXP(html, css, js)
     setXpEarned(xp)
     if (user) {
       await awardXP(user.uid, xp)
@@ -465,11 +478,19 @@ export default function VibeCodingModal({ onClose }) {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
-            className="rounded-2xl px-8 py-4 z-10"
+            className="rounded-2xl px-8 py-4 z-10 text-center"
             style={{ background: '#1C1C1C', border: `1px solid ${prompt.color}30` }}
           >
             <p style={{ color: '#555', fontSize: '0.62rem', fontFamily: 'Barlow Condensed, sans-serif', marginBottom: 4 }}>XP EARNED</p>
             <p style={{ color: '#C8F135', fontFamily: 'Anton, sans-serif', fontSize: '2.5rem', lineHeight: 1 }}>+{xpEarned}</p>
+            <p style={{ color: '#444', fontSize: '0.6rem', fontFamily: 'Barlow Condensed, sans-serif', marginTop: 6, letterSpacing: '0.05em' }}>
+              {xpEarned <= 10 ? 'BARELY STARTED — MORE CODE = MORE XP'
+                : xpEarned <= 25 ? 'MINIMAL EFFORT'
+                : xpEarned <= 45 ? 'DECENT START'
+                : xpEarned <= 65 ? 'GOOD EFFORT'
+                : xpEarned <= 80 ? 'SOLID BUILD'
+                : 'FULL COMMITMENT 🔥'}
+            </p>
           </motion.div>
 
           <motion.div
