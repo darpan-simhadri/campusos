@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Github, Search, Plus, Loader2, BookMarked, GitFork, Star } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { subscribeToRepositories, createRepository } from '../services/firebaseService'
+import { subscribeToRepositories, createRepository, starRepository, unstarRepository } from '../services/firebaseService'
 import { SkeletonCard } from '../components/ui/Skeleton'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Modal } from '../components/ui/Modal'
@@ -16,15 +16,24 @@ function stableNum(seed, max, offset = 1) {
 }
 
 function RepoCard({ repo }) {
-  const baseStars = stableNum(repo.id || repo.title || 'x', 60, 3)
-  const forks     = stableNum((repo.id || 'x') + 'f', 25, 1)
-  const [starred, setStarred]   = useState(false)
-  const [starCount, setStarCount] = useState(baseStars)
+  const { user } = useAuth()
+  const forks = stableNum((repo.id || 'x') + 'f', 25, 1)
+  const initialStarred = user?.uid ? (repo.starredBy?.includes(user.uid) || false) : false
+  const initialCount   = Array.isArray(repo.starredBy)
+    ? repo.starredBy.length
+    : (typeof repo.stars === 'number' ? repo.stars : stableNum(repo.id || repo.title || 'x', 60, 3))
+  const [starred, setStarred]     = useState(initialStarred)
+  const [starCount, setStarCount] = useState(initialCount)
 
   function toggleStar(e) {
     e.stopPropagation()
-    setStarred(s => !s)
-    setStarCount(c => starred ? c - 1 : c + 1)
+    const next = !starred
+    setStarred(next)
+    setStarCount(c => next ? c + 1 : c - 1)
+    if (user?.uid && repo.id) {
+      if (next) starRepository(repo.id, user.uid)
+      else unstarRepository(repo.id, user.uid)
+    }
   }
 
   const githubUrl = repo.repoLink?.startsWith('http')

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, MapPin, Users, Plus, X, Loader2, Clock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { subscribeToEvents, createEvent, rsvpEvent, unrsvpEvent } from '../services/firebaseService'
+import { subscribeToEvents, createEvent, rsvpEvent, unrsvpEvent, seedEvents } from '../services/firebaseService'
 import { staggerContainer, staggerItem, spring } from '../lib/motion'
 
 const EVENT_TYPES = [
@@ -255,11 +255,18 @@ function CreateEventModal({ onClose }) {
 }
 
 export default function Events() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [events, setEvents]       = useState([])
   const [loading, setLoading]     = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [filter, setFilter]       = useState('upcoming')
+  const [seeding, setSeeding]     = useState(false)
+
+  const handleSeedEvents = async () => {
+    setSeeding(true)
+    await seedEvents()
+    setSeeding(false)
+  }
 
   useEffect(() => {
     const unsub = subscribeToEvents(data => {
@@ -317,11 +324,24 @@ export default function Events() {
           {[1,2,3].map(i => <div key={i} className="rounded-2xl h-48 animate-pulse" style={{ background: '#1C1C1C' }} />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-          <p style={{ fontSize: '2rem', marginBottom: 8 }}>📅</p>
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center gap-4">
+          <p style={{ fontSize: '2rem' }}>📅</p>
           <p style={{ color: '#888', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.9rem' }}>
             No events yet. Create the first one!
           </p>
+          {events.length === 0 && (
+            <motion.button
+              onClick={handleSeedEvents}
+              disabled={seeding}
+              className="px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2"
+              style={{ background: '#C8F135', color: '#000', fontFamily: 'Anton, sans-serif', letterSpacing: '0.04em', opacity: seeding ? 0.6 : 1 }}
+              whileTap={{ scale: 0.97 }}
+              transition={spring.snappy}
+            >
+              {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {seeding ? 'SEEDING...' : 'LOAD DEMO EVENTS'}
+            </motion.button>
+          )}
         </div>
       ) : (
         <motion.div className="px-4 pb-6 space-y-4" variants={staggerContainer} initial="hidden" animate="show">

@@ -330,7 +330,14 @@ export default function Arena() {
         {activeModal === 'agent_architect' && <AgentArchitectModal key="aa" {...modalProps} />}
         {activeModal === 'trend_decode'    && <TrendDecodeModal    key="td" {...modalProps} />}
         {activeModal === 'sprint'          && <SprintModal         key="sp" {...modalProps} />}
-        {activeModal === 'dsa'             && <DSADuelModal        key="dsa" problem={dsaProblem} onClose={closeModal} onSolved={() => {}} />}
+        {activeModal === 'dsa'             && <DSADuelModal        key="dsa" problem={dsaProblem} onClose={closeModal} onSolved={async () => {
+          const xpGain = 80
+          await updateProfile({ xp: (profile?.xp || 0) + xpGain, level: Math.floor(((profile?.xp || 0) + xpGain) / 500) + 1 })
+          setSessionXP(x => x + xpGain)
+          setWinFlash(true)
+          setTimeout(() => setWinFlash(false), 2000)
+          closeModal()
+        }} />}
       </AnimatePresence>
 
       {/* Win flash */}

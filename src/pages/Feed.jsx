@@ -8,7 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
 import {
-  subscribeToFeed, createFeedPost, celebratePost, uncelebratePost,
+  subscribeToFeed, createFeedPost, celebratePost, uncelebratePost, voteHotTake,
 } from '../services/firebaseService'
 import { autoCompleteQuest } from '../lib/autoQuest'
 
@@ -274,9 +274,15 @@ function CommentSection({ postId }) {
 // ─── Post type renderers ──────────────────────────────────────────────────────
 
 function HotTakeCard({ post }) {
-  const [agree, setAgree]     = useState(post.agreeCount || 0)
-  const [disagree, setDisagree] = useState(post.disagreeCount || 0)
-  const [voted, setVoted]     = useState(null)
+  const { user, updateProfile } = useAuth()
+  const [agree, setAgree]       = useState((post.agrees?.length ?? post.agreeCount) || 0)
+  const [disagree, setDisagree] = useState((post.disagrees?.length ?? post.disagreeCount) || 0)
+  const [voted, setVoted]       = useState(() => {
+    if (!user?.uid) return null
+    if (post.agrees?.includes(user.uid)) return 'agree'
+    if (post.disagrees?.includes(user.uid)) return 'disagree'
+    return null
+  })
   const [showComments, setShowComments] = useState(false)
 
   function vote(side) {
@@ -284,6 +290,12 @@ function HotTakeCard({ post }) {
     setVoted(side)
     if (side === 'agree')    setAgree(a => a + 1)
     if (side === 'disagree') setDisagree(d => d + 1)
+    if (user?.uid && post.id && !post.id.startsWith('mock')) {
+      voteHotTake(post.id, user.uid, side)
+    }
+    if (user?.uid) {
+      autoCompleteQuest(user.uid, 'standup', updateProfile)
+    }
   }
 
   const total = agree + disagree || 1
@@ -353,9 +365,17 @@ function HotTakeCard({ post }) {
 }
 
 function PaperDecodedCard({ post }) {
+  const { user } = useAuth()
   const [showComments, setShowComments] = useState(false)
-  const [claps, setClaps] = useState(post.claps || 0)
-  const [clapped, setClapped] = useState(false)
+  const [claps, setClaps]   = useState(post.celebrations?.length ?? post.claps ?? 0)
+  const [clapped, setClapped] = useState(() => user?.uid ? (post.celebrations?.includes(user.uid) || false) : false)
+
+  function handleClap() {
+    if (clapped) return
+    setClapped(true)
+    setClaps(c => c + 1)
+    if (user?.uid && post.id && !post.id.startsWith('mock')) celebratePost(post.id, user.uid)
+  }
 
   return (
     <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: '#1C1C1C', border: '1px solid #FFD70030' }}>
@@ -392,7 +412,7 @@ function PaperDecodedCard({ post }) {
 
       {/* Clap */}
       <div className="flex items-center justify-between">
-        <button onClick={() => { if (!clapped) { setClapped(true); setClaps(c => c + 1) } }}
+        <button onClick={handleClap}
           className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-white transition-colors">
           <HandHeart size={13} style={{ color: clapped ? '#C8F135' : undefined }} />
           <span style={{ color: clapped ? '#C8F135' : undefined }}>{claps} claps</span>
@@ -418,10 +438,18 @@ const DUEL_TYPE_ICONS = {
 }
 
 function DuelResultCard({ post }) {
+  const { user } = useAuth()
   const [showComments, setShowComments] = useState(false)
-  const [claps, setClaps] = useState(post.claps || 0)
-  const [clapped, setClapped] = useState(false)
+  const [claps, setClaps]   = useState(post.celebrations?.length ?? post.claps ?? 0)
+  const [clapped, setClapped] = useState(() => user?.uid ? (post.celebrations?.includes(user.uid) || false) : false)
   const Icon = DUEL_TYPE_ICONS[post.duelType] || Swords
+
+  function handleClap() {
+    if (clapped) return
+    setClapped(true)
+    setClaps(c => c + 1)
+    if (user?.uid && post.id && !post.id.startsWith('mock')) celebratePost(post.id, user.uid)
+  }
   const isHTML = post.duelType === 'build_race'
 
   return (
@@ -456,7 +484,7 @@ function DuelResultCard({ post }) {
       )}
 
       <div className="flex items-center justify-between">
-        <button onClick={() => { if (!clapped) { setClapped(true); setClaps(c => c + 1) } }}
+        <button onClick={handleClap}
           className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-white transition-colors">
           <HandHeart size={13} style={{ color: clapped ? '#C8F135' : undefined }} />
           <span style={{ color: clapped ? '#C8F135' : undefined }}>{claps}</span>
@@ -473,9 +501,17 @@ function DuelResultCard({ post }) {
 }
 
 function StandardCard({ post }) {
+  const { user } = useAuth()
   const [showComments, setShowComments] = useState(false)
-  const [claps, setClaps] = useState(post.claps || 0)
-  const [clapped, setClapped] = useState(false)
+  const [claps, setClaps]   = useState(post.celebrations?.length ?? post.claps ?? 0)
+  const [clapped, setClapped] = useState(() => user?.uid ? (post.celebrations?.includes(user.uid) || false) : false)
+
+  function handleClap() {
+    if (clapped) return
+    setClapped(true)
+    setClaps(c => c + 1)
+    if (user?.uid && post.id && !post.id.startsWith('mock')) celebratePost(post.id, user.uid)
+  }
 
   return (
     <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: '#1C1C1C', border: '1px solid #2a2a2a' }}>
@@ -494,7 +530,7 @@ function StandardCard({ post }) {
       </div>
       {post.content && <p className="text-sm text-white leading-relaxed">{post.content}</p>}
       <div className="flex items-center justify-between">
-        <button onClick={() => { if (!clapped) { setClapped(true); setClaps(c => c + 1) } }}
+        <button onClick={handleClap}
           className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-white transition-colors">
           <HandHeart size={13} style={{ color: clapped ? '#C8F135' : undefined }} />
           <span style={{ color: clapped ? '#C8F135' : undefined }}>{claps || 0}</span>
@@ -641,7 +677,7 @@ export default function Feed() {
       authorImage: profile?.photoURL || null,
     })
     addTickerItem(`💬 ${profile?.name || 'You'} posted on the Feed`)
-    await autoCompleteQuest(uid, 'feed_post', updateProfile)
+    await autoCompleteQuest(uid, 'post', updateProfile)
   }
 
   return (

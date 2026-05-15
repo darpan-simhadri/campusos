@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
+import { awardXP, voteCampusProblem, submitCampusSolution } from '../services/firebaseService'
 
 // ─── SEASON DATA ────────────────────────────────────────────────────────────
 const SEASON = {
@@ -180,6 +181,7 @@ function IdentityPanel({ tracks }) {
 
 // ─── Campus Problems panel ────────────────────────────────────────────────────
 function CampusProblemsPanel() {
+  const { user, profile } = useAuth()
   const [selected, setSelected]   = useState(null)
   const [solution, setSolution]   = useState('')
   const [submitted, setSubmitted] = useState(new Set())
@@ -190,12 +192,14 @@ function CampusProblemsPanel() {
     if (voted.has(id)) return
     setVoted(v => new Set([...v, id]))
     setProblems(ps => ps.map(p => p.id === id ? { ...p, votes: p.votes + 1 } : p))
+    if (user?.uid) voteCampusProblem(id, user.uid)
   }
 
   function handleSubmitSolution(id) {
     if (!solution.trim()) return
     setSubmitted(s => new Set([...s, id]))
     setProblems(ps => ps.map(p => p.id === id ? { ...p, solutions: p.solutions + 1 } : p))
+    if (user?.uid) submitCampusSolution(id, user.uid, profile?.fullName || 'Anonymous', solution)
     setSolution('')
     setSelected(null)
   }
@@ -349,15 +353,23 @@ function SpecWarsPanel({ mySpec }) {
 
 // ─── Bounties panel ───────────────────────────────────────────────────────────
 function BountiesPanel() {
+  const { user, updateProfile, profile } = useAuth()
   const [bounties, setBounties] = useState(BOUNTIES)
   const [claimed, setClaimed]   = useState(new Set())
   const [showPost, setShowPost] = useState(false)
   const [newBounty, setNewBounty] = useState({ title: '', desc: '', xp: 100 })
 
-  function claimBounty(id) {
+  async function claimBounty(id) {
     if (claimed.has(id)) return
+    const bounty = bounties.find(b => b.id === id)
     setClaimed(c => new Set([...c, id]))
     setBounties(bs => bs.map(b => b.id === id ? { ...b, claimed: true } : b))
+    if (user?.uid && bounty) {
+      const newXP = await awardXP(user.uid, bounty.xp)
+      if (newXP !== undefined && updateProfile) {
+        updateProfile({ xp: newXP, level: Math.floor(newXP / 500) + 1 })
+      }
+    }
   }
 
   function postBounty() {

@@ -758,6 +758,143 @@ export const celebratePost = (postId, uid) =>
 export const uncelebratePost = (postId, uid) =>
   updateDoc(doc(db, 'feedPosts', postId), { celebrations: arrayRemove(uid) })
 
+export const voteHotTake = (postId, uid, side) => {
+  const field = side === 'agree' ? 'agrees' : 'disagrees'
+  return updateDoc(doc(db, 'feedPosts', postId), { [field]: arrayUnion(uid) })
+}
+
+// ─── Campus Problems ──────────────────────────────────────────────────────────
+
+export const voteCampusProblem = (problemId, uid) =>
+  setDoc(doc(db, 'campusProblems', problemId), { voters: arrayUnion(uid) }, { merge: true })
+
+export const submitCampusSolution = (problemId, uid, authorName, solution) =>
+  addDoc(collection(db, 'campusProblems', problemId, 'solutions'), {
+    authorId: uid,
+    authorName,
+    solution,
+    createdAt: serverTimestamp(),
+  })
+
+// ─── Repository Stars ─────────────────────────────────────────────────────────
+
+export const starRepository = (repoId, uid) =>
+  updateDoc(doc(db, 'repositories', repoId), { starredBy: arrayUnion(uid) })
+
+export const unstarRepository = (repoId, uid) =>
+  updateDoc(doc(db, 'repositories', repoId), { starredBy: arrayRemove(uid) })
+
+// ─── Bounty Claim ─────────────────────────────────────────────────────────────
+
+export const claimBountyXP = async (uid, xpAmount) => {
+  const newXP = await awardXP(uid, xpAmount)
+  return newXP
+}
+
+// ─── Seed Events ──────────────────────────────────────────────────────────────
+
+export const seedEvents = async () => {
+  const events = [
+    {
+      title: 'HackSprint 2026 — 24H Campus Hackathon',
+      description: 'Build anything useful for campus life in 24 hours. Prizes for Best UI, Most Innovative, and Best AI Integration. Team of 2–4.',
+      type: 'hackathon',
+      eventDate: '2026-05-25',
+      time: '10:00 AM',
+      venue: 'Innovation Hub, Block A',
+      maxAttendees: 120,
+      rsvps: ['dummy_u01', 'dummy_u03', 'dummy_u05', 'dummy_u09', 'dummy_u11', 'dummy_u14'],
+      createdBy: 'admin',
+      createdByName: 'Student Council',
+    },
+    {
+      title: 'LLM Fine-Tuning Workshop — Hands On',
+      description: 'Learn to fine-tune Mistral 7B with LoRA on your own dataset using free Colab GPU. Bring your laptop. Limited seats.',
+      type: 'workshop',
+      eventDate: '2026-05-22',
+      time: '2:00 PM',
+      venue: 'AI Lab 2, Block C',
+      maxAttendees: 40,
+      rsvps: ['dummy_u02', 'dummy_u06', 'dummy_u07', 'dummy_u13', 'dummy_u16'],
+      createdBy: 'admin',
+      createdByName: 'AIML Club',
+    },
+    {
+      title: 'Campus Dev Meetup #4',
+      description: 'Monthly gathering of builders. Lightning talks (5 min each), project demos, and networking. Open to all specs.',
+      type: 'meetup',
+      eventDate: '2026-05-30',
+      time: '6:00 PM',
+      venue: 'Seminar Hall B',
+      maxAttendees: 80,
+      rsvps: ['dummy_u01', 'dummy_u05', 'dummy_u06', 'dummy_u11', 'dummy_u20'],
+      createdBy: 'admin',
+      createdByName: 'Coding Club',
+    },
+    {
+      title: 'System Design Deep Dive — FAANG Prep',
+      description: 'Mock system design round with real interviewers from top companies. Practice designing scalable systems live.',
+      type: 'seminar',
+      eventDate: '2026-06-05',
+      time: '11:00 AM',
+      venue: 'Lecture Hall C',
+      maxAttendees: 60,
+      rsvps: ['dummy_u03', 'dummy_u09', 'dummy_u14', 'dummy_u20'],
+      createdBy: 'admin',
+      createdByName: 'Placement Cell',
+    },
+    {
+      title: 'Quantum Computing Bootcamp — Day 1',
+      description: '2-day bootcamp on quantum fundamentals: qubits, gates, and Grover\'s algorithm using Qiskit. No prior knowledge needed.',
+      type: 'workshop',
+      eventDate: '2026-06-12',
+      time: '9:00 AM',
+      venue: 'Physics Lab',
+      maxAttendees: 30,
+      rsvps: ['dummy_u10', 'dummy_u18'],
+      createdBy: 'admin',
+      createdByName: 'Quantum Computing Club',
+    },
+    {
+      title: 'Inter-Spec Cricket Tournament',
+      description: 'Annual cricket tournament — each spec fields one team. Round-robin format over 2 weekends. Register your team captain.',
+      type: 'sports',
+      eventDate: '2026-06-20',
+      time: '8:00 AM',
+      venue: 'Main Cricket Ground',
+      maxAttendees: null,
+      rsvps: ['dummy_u01', 'dummy_u03', 'dummy_u05', 'dummy_u08', 'dummy_u09', 'dummy_u11', 'dummy_u14', 'dummy_u15', 'dummy_u19'],
+      createdBy: 'admin',
+      createdByName: 'Sports Committee',
+    },
+    {
+      title: 'Open Source Day — Contribute & Win',
+      description: 'Spend 4 hours making meaningful open-source contributions. Top contributors get GitHub merch and 500 XP.',
+      type: 'hackathon',
+      eventDate: '2026-06-28',
+      time: '10:00 AM',
+      venue: 'Computer Lab Block D',
+      maxAttendees: 50,
+      rsvps: ['dummy_u05', 'dummy_u06', 'dummy_u11', 'dummy_u14'],
+      createdBy: 'admin',
+      createdByName: 'GitHub Campus',
+    },
+    {
+      title: 'Annual Tech Fest — Revamped',
+      description: 'Keynotes, workshops, hackathon, project expo, and cultural night. Biggest campus event of the year. All-day passes available.',
+      type: 'cultural',
+      eventDate: '2026-07-15',
+      time: '9:00 AM',
+      venue: 'Main Auditorium + Campus Grounds',
+      maxAttendees: 500,
+      rsvps: ['dummy_u01', 'dummy_u02', 'dummy_u03', 'dummy_u04', 'dummy_u05', 'dummy_u06', 'dummy_u07', 'dummy_u08'],
+      createdBy: 'admin',
+      createdByName: 'Student Council',
+    },
+  ]
+  for (const e of events) await addDocument('events', e)
+}
+
 // ─── Store / Inventory ────────────────────────────────────────────────────────
 
 export const STORE_CATALOG = [
