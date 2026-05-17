@@ -130,7 +130,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/CampusOS/">
       <ThemeProvider>
         <AppProvider>
           <AuthProvider>
