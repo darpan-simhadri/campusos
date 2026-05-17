@@ -1,0 +1,132 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function notSuspended() {
+      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspended != true;
+    }
+
+    // Users collection
+    match /users/{uid} {
+      allow read: if isAuth();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Registration Numbers (for uniqueness check)
+    match /registrationNumbers/{regNum} {
+      allow read: if isAuth();
+      allow write: if isAuth();
+    }
+
+    // Posts (Problem Pool)
+    match /posts/{postId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && notSuspended();
+      allow update: if isAuth();
+      allow delete: if isAdmin() || (isAuth() && resource.data.authorId == request.auth.uid);
+
+      match /comments/{commentId} {
+        allow read: if isAuth();
+        allow create: if isAuth() && notSuspended();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Messages
+    match /conversations/{chatId} {
+      allow read: if isAuth() && request.auth.uid in resource.data.participants;
+      allow create: if isAuth();
+      allow update: if isAuth() && request.auth.uid in resource.data.participants;
+
+      match /chats/{msgId} {
+        allow read: if isAuth();
+        allow create: if isAuth();
+      }
+    }
+
+    // Study Groups
+    match /studyGroups/{groupId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && notSuspended();
+      allow update: if isAuth();
+      allow delete: if isAdmin() || (isAuth() && resource.data.creatorId == request.auth.uid);
+    }
+
+    // Opportunities
+    match /opportunities/{oppId} {
+      allow read: if isAuth();
+      allow create: if isAdmin();
+      allow update: if isAuth();
+      allow delete: if isAdmin();
+    }
+
+    // Achievements
+    match /achievements/{achId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && notSuspended();
+      allow update: if isAuth();
+      allow delete: if isAdmin() || (isAuth() && resource.data.authorId == request.auth.uid);
+    }
+
+    // Projects
+    match /projects/{projId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && notSuspended();
+      allow update: if isAuth();
+      allow delete: if isAdmin() || (isAuth() && resource.data.authorId == request.auth.uid);
+    }
+
+    // Polls
+    match /polls/{pollId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && notSuspended();
+      allow update: if isAuth();
+      allow delete: if isAdmin();
+    }
+
+    // Lost & Found
+    match /lostFound/{itemId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && notSuspended();
+      allow update: if isAuth() && (resource.data.reporterId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Challenges
+    match /challenges/{challengeId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && notSuspended();
+      allow update: if isAuth();
+      allow delete: if isAdmin() || (isAuth() && resource.data.authorId == request.auth.uid);
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth();
+      allow update: if isAuth() && resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // Reports
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if isAuth() && notSuspended();
+      allow delete: if isAdmin();
+    }
+  }
+}
