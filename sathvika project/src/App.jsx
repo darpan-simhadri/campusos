@@ -79,7 +79,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/campusos/">
+    <BrowserRouter basename="/CampusOS/">
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
